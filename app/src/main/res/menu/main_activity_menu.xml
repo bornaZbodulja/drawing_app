@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/strokeSizeAction"
+        android:title="@string/stroke_size_action"
+        />
+
+    <item
+        android:id="@+id/strokeColorAction"
+        android:title="@string/stroke_color_action"/>
+
+    <item
+        android:id="@+id/clearDrawingAction"
+        android:title="@string/clear_canvas_action"/>
+
+    <item
+        android:id="@+id/saveDrawingAction"
+        android:title="@string/save_action"/>
+
+
+
+</menu>

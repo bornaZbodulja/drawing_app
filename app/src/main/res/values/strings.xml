@@ -11,4 +11,5 @@
     <string name="select_text">Select</string>
     <string name="cancel_text">Cancel</string>
     <string name="drawing_name_info">Drawing Name:</string>
+    <string name="share_action">Share Drawing</string>
 </resources>

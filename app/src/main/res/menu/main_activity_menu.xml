@@ -19,6 +19,8 @@
         android:id="@+id/saveDrawingAction"
         android:title="@string/save_action"/>
 
-
+    <item
+        android:id="@+id/shareDrawingAction"
+        android:title="@string/share_action"/>
 
 </menu>

@@ -4,12 +4,14 @@ import android.app.AlertDialog
 import android.content.ContentValues
 import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -29,6 +31,7 @@ import com.skydoves.colorpickerview.ColorPickerDialog
 import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
 import kotlinx.android.synthetic.main.save_drawing_pop_up.view.*
 import kotlinx.android.synthetic.main.stroke_width_pop_up.view.*
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
@@ -41,6 +44,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var canvasView: CanvasView
     private val STORAGE_PERMISSION_CODE = 101
+    private val SHARE_REQUEST_CODE = 1001
+    private lateinit var uri: Uri
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(canvasView)
 
         // hide status bar
-        this?.window?.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        this.window?.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
 
     }
 
@@ -75,6 +80,7 @@ class MainActivity : AppCompatActivity() {
                     requestForWritePermission()
                 }
             }
+            R.id.shareDrawingAction -> { shareOptionAction() }
         }
 
         return true
@@ -195,7 +201,13 @@ class MainActivity : AppCompatActivity() {
                 file.mkdir()
             }
             val image = File(imagesDir, filename)
-            write(FileOutputStream(image))
+            try {
+                write(FileOutputStream(image))
+                Toast.makeText(applicationContext, "Drawing successfully saved", Toast.LENGTH_SHORT).show()
+            }catch (e: Exception){
+                Toast.makeText(applicationContext, "An error occurred while saving the drawing", Toast.LENGTH_SHORT).show()
+            }
+
         }
     }
 
@@ -213,9 +225,49 @@ class MainActivity : AppCompatActivity() {
         if(requestCode == STORAGE_PERMISSION_CODE && grantResults.isNotEmpty()){
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED){
                 Toast.makeText(applicationContext, "Storage Permission Granted", Toast.LENGTH_SHORT).show()
+                saveDrawingPopUpSetup()
             }else{
                 Toast.makeText(applicationContext, "Storage Permission Denied", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun shareOptionAction(){
+
+        val shareIntent = Intent()
+
+        try {
+            uri = getImageUri(applicationContext, takeScreenshot(canvasView))
+
+            shareIntent.apply {
+                setAction(Intent.ACTION_SEND)
+                putExtra(Intent.EXTRA_STREAM, uri)
+                type = "image/png"
+            }
+            startActivityForResult(Intent.createChooser(shareIntent,"Share via: "), SHARE_REQUEST_CODE)
+
+        }catch (e: Exception){
+            e.printStackTrace()
+            Toast.makeText(applicationContext, "Error occurred while trying to share a drawing", Toast.LENGTH_SHORT).show()
+        }
+
+    }
+
+    private fun getImageUri(context: Context, image: Bitmap): Uri{
+        val bytes = ByteArrayOutputStream()
+        image.compress(Bitmap.CompressFormat.PNG, 100, bytes)
+        val path = MediaStore.Images.Media.insertImage(context.contentResolver, image, "Title", null)
+        Log.d("IMAGE_PATH", path)
+        return Uri.parse(path)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if(requestCode == SHARE_REQUEST_CODE && this::uri.isInitialized){
+            this.contentResolver.delete(uri, null, null)
+            // uri.recycle()
+            Log.d("URI_DELETE_TAG", "image uri successfully deleted")
         }
     }
 }
